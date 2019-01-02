@@ -8,6 +8,14 @@ import * as ts from "typescript";
 import * as Resources from "GeneralResources";
 import GenRes from "GeneralResources";
 import { GenRes1 } from "GeneralResources";
+import GenRes2 = require("ClassicNetwork/ClientResources/GeneralResources");
+
+var SubnetResources = GenRes2.VirtualNetwork.Subnets;
+
+export interface prompts {
+  prompt1: string;
+  prompt2: string;
+}
 
 export class Test {
     public name: string;
@@ -19,10 +27,16 @@ export class Test {
 
 	public run() {
     	let stuff = Resources.words;
-      let moreStuff = GenRes.moreWords;
-      let mostStuff = GenRes1.mostWords;
-      let stuff1 = stuff.delete;
-      console.log(moreStuff.update);
+      	let moreStuff = GenRes.moreWords;
+      	let mostStuff = GenRes1.mostWords;
+        let stuff1 = stuff.delete;
+      	console.log(moreStuff.update);
+      	
+    }
+
+	private pass(prmpts: prompts) {
+    	console.log(prmpts.prompt1);
+      	console.log(prmpts.prompt2);
     }
 }
  */
