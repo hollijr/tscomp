@@ -9,6 +9,7 @@ import * as Resources from "GeneralResources";
 import GenRes from "GeneralResources";
 import { GenRes1 } from "GeneralResources";
 import GenRes2 = require("ClassicNetwork/ClientResources/GeneralResources");
+import Helper from "Helpers.ts";
 
 var SubnetResources = GenRes2.VirtualNetwork.Subnets;
 
@@ -18,36 +19,44 @@ export interface prompts {
 }
 
 export class Test {
-    public name: string;
+  public name: string;
+	private _prompts: prompts;
 
-    constructor(name: string) {
-        this.name = name;
-
-    }
+  constructor(name: string) {
+    this.name = name;
+    this._prompts = {
+      prompt1: "hi",
+      prompt2: "bye"
+    };
+  }
 
 	public run() {
-    	let stuff = Resources.words;
-      	let moreStuff = GenRes.moreWords;
-      	let mostStuff = GenRes1.mostWords;
-        let stuff1 = stuff.delete;
-      	console.log(moreStuff.update);
-      	
-    }
+    let stuff = Resources.words;
+    let moreStuff = GenRes.moreWords;
+    let mostStuff = GenRes1.mostWords;
+    let stuff1 = stuff.delete;
+    console.log(moreStuff.update);
+    this.pass(this._prompts);
+    Helper.prompt(this._prompts);  // trace through separate ASTs?
+  }
 
 	private pass(prmpts: prompts) {
-    	console.log(prmpts.prompt1);
-      	console.log(prmpts.prompt2);
-    }
+    console.log(prmpts.prompt1);
+    console.log(prmpts.prompt2);
+  }
 }
+
  */
 
+ // using typescript compiler api
 export function findStrings(sourceFile: ts.SourceFile) {
+  // aliases for identifiers that reference GeneralResources objects
   let aliases: String[] = [];
   let strings: String[] = [];
   searchNode(sourceFile);
 
-  // using typescript compiler api
   function searchNode(node: ts.Node) {
+    let text: string = "";
     switch (node.kind) {
       case ts.SyntaxKind.ImportDeclaration:
         // import GenRes from "GeneralResources";
@@ -59,9 +68,8 @@ export function findStrings(sourceFile: ts.SourceFile) {
         // import * as Resources from "GeneralResources";
         // <ImportDeclaration>node.importClause.<NamespaceImport>namedBindings.name.text == "Resources"
 
-
-        let importNode = <ts.ImportDeclaration>node,
-            text = (<ts.ImportDeclaration>node).moduleSpecifier.getText();
+        let importNode = <ts.ImportDeclaration>node;
+        text = (<ts.ImportDeclaration>node).moduleSpecifier.getText();
         if (text.endsWith("GeneralResources")) {
           let importClause = importNode.importClause;
           if (importClause.name) {
@@ -69,16 +77,28 @@ export function findStrings(sourceFile: ts.SourceFile) {
           } else if (importClause.namedBindings) {
             if ((<ts.NamespaceImport>importClause.namedBindings).name) {
               aliases.push((<ts.NamespaceImport>importClause.namedBindings).name.getText());
-            } else {
+            } else if ((<ts.NamedImports>importClause.namedBindings).elements) {
               (<ts.NamedImports>importClause.namedBindings).elements.forEach((element: ts.ImportSpecifier) => aliases.push(element.name.getText()));
             }
           }
         }
         break;
 
-      // import GenRes2 = require("GeneralResources");
-      // <ImportEqualsDeclaration>node.name.text == "GenRes2"
-      case ts.SyntaxKind.ImportEqualsDeclaration
+      case ts.SyntaxKind.ImportEqualsDeclaration:
+        // import GenRes2 = require("GeneralResources");
+        // <ImportEqualsDeclaration>node.name.text == "GenRes2"
+        let importEqualsNode = <ts.ImportEqualsDeclaration>node,
+            modRef = importEqualsNode.moduleReference; // ModuleReference: EntityName for internal module ref & ExternalModuleReference for external
+        if (ts.isExternalModuleReference(modRef) && (<ts.ExternalModuleReference>modRef).expression.kind === ts.SyntaxKind.StringLiteral) {
+          text = (<ts.ExternalModuleReference>modRef).expression.getText();
+        } else if (ts.isEntityName(modRef) && (<ts.EntityName>modRef).getText()) {
+          text = (<ts.EntityName>modRef).getText();
+        }
+        
+        if (text && text.endsWith("GeneralResources")) {
+          aliases.push(importClause.name.getText());
+        }
+        break;
 
       // let stuff = Resources.words;
       // let moreStuff = GenRes.moreWords;
