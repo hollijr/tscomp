@@ -1,6 +1,31 @@
 import { readFileSync } from "fs";
 import * as ts from "typescript";
 
+/**
+ * SAMPLE CODE:  type into https://astexplorer.net/ to see types/symbols of nodes
+ 
+import * as Resources from "GeneralResources";
+import GenRes from "GeneralResources";
+import { GenRes1 } from "GeneralResources";
+
+export class Test {
+    public name: string;
+
+    constructor(name: string) {
+        this.name = name;
+
+    }
+
+	public run() {
+    	let stuff = Resources.words;
+      	let moreStuff = GenRes.moreWords;
+      	let mostStuff = GenRes1.mostWords;
+        let stuff1 = stuff.delete;
+      	console.log(moreStuff.update);
+    }
+}
+ */
+
 export function findStrings(sourceFile: ts.SourceFile) {
   let alias = [];
   let strings = [];
@@ -33,10 +58,12 @@ export function findStrings(sourceFile: ts.SourceFile) {
           // PropertyAccessExpression.expression.text == "moreStuff"  --> Identifier
           // PropertyAccessExpression.name.text == "update"  --> Identifier
           
+          
         }
-      case ts.SyntaxKind.ForStatement:
-      case ts.SyntaxKind.ForInStatement:
-      case ts.SyntaxKind.WhileStatement:
+      case ts.SyntaxKind.VariableDeclaration:
+        let flag = node.flags;
+      case ts.SyntaxKind.ExpressionStatement:
+      case ts.SyntaxKind.PropertyAccessExpression:
       case ts.SyntaxKind.DoStatement:
         if ((<ts.IterationStatement>node).statement.kind !== ts.SyntaxKind.Block) {
           report(
@@ -101,5 +128,5 @@ fileNames.forEach(fileName => {
   );
 
   // delint it
-  delint(sourceFile);
+  findStrings(sourceFile);
 });
