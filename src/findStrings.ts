@@ -96,7 +96,7 @@ export function findStrings(sourceFile: ts.SourceFile) {
         }
         
         if (text && text.endsWith("GeneralResources")) {
-          aliases.push(importClause.name.getText());
+          aliases.push(text);
         }
         break;
 
