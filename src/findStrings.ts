@@ -37,13 +37,15 @@ export function findStrings(sourceFile: ts.SourceFile) {
     switch (node.kind) {
       case ts.SyntaxKind.ImportDeclaration:
         // import GenRes from "GeneralResources";
-        // node.importClause.name.text == "GenRes"
+        // <ImportDeclaration>node.importClause.name.text == "GenRes"
 
         // import { GenRes } from "GeneralResources";
-        // node.importClause.namedBindings.elements[].ImportSpecifier.name.text == "GenRes"
+        // <ImportDeclaration>node.importClause.<NamedImports>namedBindings.elements[].ImportSpecifier.name.text == "GenRes"
 
         // import * as Resources from "GeneralResources";
-        // node.importClause.namedBindings.name.text == "Resources"
+        // <ImportDeclaration>node.importClause.<NamespaceImport>namedBindings.name.text == "Resources"
+
+
         let importNode = <ts.ImportDeclaration>node,
             text = (<ts.ImportDeclaration>node).moduleSpecifier.getText();
         if (text.endsWith("GeneralResources")) {
@@ -59,6 +61,10 @@ export function findStrings(sourceFile: ts.SourceFile) {
           }
         }
         break;
+
+      // import GenRes2 = require("GeneralResources");
+      // <ImportEqualsDeclaration>node.name.text == "GenRes2"
+      case ts.SyntaxKind.ImportEqualsDeclaration
 
       // let stuff = Resources.words;
       // let moreStuff = GenRes.moreWords;
