@@ -3,6 +3,7 @@ import * as ts from "typescript";
 
 /**
  * SAMPLE CODE:  type into https://astexplorer.net/ to see types/symbols of nodes
+ * set format to JavaScript and typescript OR JavaScript and typescript-eslint-parser
  
 import * as Resources from "GeneralResources";
 import GenRes from "GeneralResources";
@@ -18,48 +19,59 @@ export class Test {
 
 	public run() {
     	let stuff = Resources.words;
-      	let moreStuff = GenRes.moreWords;
-      	let mostStuff = GenRes1.mostWords;
-        let stuff1 = stuff.delete;
-      	console.log(moreStuff.update);
+      let moreStuff = GenRes.moreWords;
+      let mostStuff = GenRes1.mostWords;
+      let stuff1 = stuff.delete;
+      console.log(moreStuff.update);
     }
 }
  */
 
 export function findStrings(sourceFile: ts.SourceFile) {
-  let alias = [];
-  let strings = [];
+  let aliases: String[] = [];
+  let strings: String[] = [];
   searchNode(sourceFile);
 
+  // using typescript compiler api
   function searchNode(node: ts.Node) {
     switch (node.kind) {
       case ts.SyntaxKind.ImportDeclaration:
-        let text = (<ts.ImportDeclaration>node).moduleSpecifier.getText();
+        // import GenRes from "GeneralResources";
+        // node.importClause.name.text == "GenRes"
+
+        // import { GenRes } from "GeneralResources";
+        // node.importClause.namedBindings.elements[].ImportSpecifier.name.text == "GenRes"
+
+        // import * as Resources from "GeneralResources";
+        // node.importClause.namedBindings.name.text == "Resources"
+        let importNode = <ts.ImportDeclaration>node,
+            text = (<ts.ImportDeclaration>node).moduleSpecifier.getText();
         if (text.endsWith("GeneralResources")) {
-          // import { GenRes } from "GeneralResources";
-          // node.importClause.namedBindings.elements.ImportSpecifier.Identifier.text == "GenRes"
-
-          // import GenRes from "GeneralResources";
-          // node.importClause.name.text == "GenRes"
-
-          // import * as Resources from "GeneralResources";
-          // node.importClause.namedBindings.name.text == "Resources"
-
-          // let stuff = Resources.words;
-      	  // let moreStuff = GenRes.moreWords;
-      	  // let mostStuff = GenRes1.mostWords;
-          // let stuff1 = stuff.delete;
-          // VariableDeclaration.declarationList.declaractions.VariableDeclaration.name == "moreStuff"
-          // node.VariableDeclaration.declarationList.declaractions.VariableDeclaration.initializer.expression.text == "Resources|GenRes|GenRes1|stuff"
-          // node.VariableDeclaration.declarationList.declaractions.VariableDeclaration.initializer.Identifier.text == "words|moreWords" could be ".escapedText"
-
-          // console.log(moreStuff.update);
-          // ExpressionStatement.expression.arguments.PropertyAccessExpression...
-          // PropertyAccessExpression.expression.text == "moreStuff"  --> Identifier
-          // PropertyAccessExpression.name.text == "update"  --> Identifier
-          
-          
+          let importClause = importNode.importClause;
+          if (importClause.name) {
+            aliases.push(importClause.name.getText());
+          } else if (importClause.namedBindings) {
+            if ((<ts.NamespaceImport>importClause.namedBindings).name) {
+              aliases.push((<ts.NamespaceImport>importClause.namedBindings).name.getText());
+            } else {
+              (<ts.NamedImports>importClause.namedBindings).elements.forEach((element: ts.ImportSpecifier) => aliases.push(element.name.getText()));
+            }
+          }
         }
+        break;
+
+      // let stuff = Resources.words;
+      // let moreStuff = GenRes.moreWords;
+      // let mostStuff = GenRes1.mostWords;
+      // let stuff1 = stuff.delete;
+      // VariableDeclaration.declarationList.declaractions.VariableDeclaration.name == "moreStuff"
+      // node.VariableDeclaration.declarationList.declaractions.VariableDeclaration.initializer.expression.text == "Resources|GenRes|GenRes1|stuff"
+      // node.VariableDeclaration.declarationList.declaractions.VariableDeclaration.initializer.Identifier.text == "words|moreWords" could be ".escapedText"
+
+      // console.log(moreStuff.update);
+      // ExpressionStatement.expression.arguments.PropertyAccessExpression...
+      // PropertyAccessExpression.expression.text == "moreStuff"  --> Identifier
+      // PropertyAccessExpression.name.text == "update"  --> Identifier
       case ts.SyntaxKind.VariableDeclaration:
         let flag = node.flags;
       case ts.SyntaxKind.ExpressionStatement:
