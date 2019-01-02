@@ -17,7 +17,9 @@ Local Setup
     
 Run a file:
 - tsc <filename>.ts
+    
     -> compiles .ts to .js and creates AST for source file
+    
 - node <filename>.js
 
 findStrings.ts is WIP to find all strings that originate from an imported resource
