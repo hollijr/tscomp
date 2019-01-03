@@ -13,7 +13,6 @@ Local Setup
     git clone https://github.com/hollijr/tscomp 
     
 - cd tscomp
-- git init
 - npm install
     
 Run a file:

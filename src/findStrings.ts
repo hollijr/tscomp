@@ -91,13 +91,14 @@ export function findStrings(sourceFile: ts.SourceFile) {
           let importClause = importNode.importClause; // type: ImportClause
 
           // ImportClause optionally has .name or .namedBindings properties
-          if (importClause.name) {  // type: Identifier
+          if (importClause.name && aliases.indexOf(importClause.name.text) < 0) {  // type: Identifier
             aliases.push(importClause.name.text);
           } else if (importClause.namedBindings) {  // type: NamedImportBindings
 
             // NamedImportBindings = NamedspaceImport | NamedImports
-            if ((<ts.NamespaceImport>importClause.namedBindings).name) {
-              aliases.push((<ts.NamespaceImport>importClause.namedBindings).name.text);
+            if ((<ts.NamespaceImport>importClause.namedBindings).name && 
+              aliases.indexOf((<ts.NamespaceImport>importClause.namedBindings).name.text) < 0) {
+                aliases.push((<ts.NamespaceImport>importClause.namedBindings).name.text);
             } else if ((<ts.NamedImports>importClause.namedBindings).elements) {
               (<ts.NamedImports>importClause.namedBindings).elements.forEach((element: ts.ImportSpecifier) => aliases.push(element.name.text));
             }
@@ -131,17 +132,22 @@ export function findStrings(sourceFile: ts.SourceFile) {
           //  right: Identifier => "MoreHelpers"
           // }
           let entName = <ts.EntityName>modRef;
+          if (ts.isQualifiedName(entName)) {
+            do {
+              text = (<ts.QualifiedName>entName).right.getText();
+              if (text && text.search(/\s/) < 0 && text.endsWith("GeneralResources") && aliases.indexOf(text) < 0) {
+                aliases.push(text);
+              } 
+              entName = (<ts.QualifiedName>entName).left;
+            } while (ts.isQualifiedName(entName));
+          } 
           if (ts.isIdentifier(entName)) {
             text = (<ts.Identifier>entName).text;
-          } else {
-            while (ts.isQualifiedName(entName)) {
-
-            }
           }
-          text = (<ts.EntityName>modRef).getText();
+          
         }
         
-        if (text && text.search(/\s/) < 0 && text.endsWith("GeneralResources")) {
+        if (text && text.search(/\s/) < 0 && text.endsWith("GeneralResources") && aliases.indexOf(text) < 0) {
           aliases.push(text);
         }
         break;
