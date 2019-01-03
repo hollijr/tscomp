@@ -1,5 +1,6 @@
 import { readFileSync } from "fs";
 import * as ts from "typescript";
+import { test } from "./test";
 
 /**
  * SAMPLE CODE:  type into https://astexplorer.net/ to see types/symbols of nodes
@@ -60,16 +61,23 @@ export class Test {
 }
 
  */
+export interface IAlias {
+  left: string;
+  right: string;
+}
 
  // using typescript compiler api
 export function findStrings(sourceFile: ts.SourceFile) {
-  // aliases for identifiers that reference GeneralResources objects
-  let aliases: String[] = [];
-  let strings: String[] = [];
+  // aliases for identifiers that (for now) reference "GeneralResources" objects
+  let aliases: IAlias[] = [];
+  let strings: string[] = [];
+  let needle = "GeneralResources";
   searchNode(sourceFile);
+  report(sourceFile, aliases.toString());
 
   function searchNode(node: ts.Node) {
-    let text: string = "";
+    let re = new RegExp("^(.*/)*" + needle + "(/.*)*$");
+    let right: string = "";
     switch (node.kind) {
       case ts.SyntaxKind.ImportDeclaration:
         // import GenRes from "GeneralResources";
@@ -86,21 +94,25 @@ export function findStrings(sourceFile: ts.SourceFile) {
         // ImportDeclaration.moduleSpecifier is type Expression but should be a StringLiteral (per types.ts).
         // If it is not, it is a grammar error.  So we'll cast it to a StringLiteral so we can 
         // get it's .text property.  If it's not a StringLiteral, this property will be undefined.
-        text = (<ts.StringLiteral>importNode.moduleSpecifier).text;  
-        if (text && text.endsWith("GeneralResources")) {
+
+        // The import value can begin with, end with or contain the needle between / to 
+        right = (<ts.StringLiteral>importNode.moduleSpecifier).text;  
+        
+        if (right && right.search(re) > 0) {
           let importClause = importNode.importClause; // type: ImportClause
 
           // ImportClause optionally has .name or .namedBindings properties
-          if (importClause.name && aliases.indexOf(importClause.name.text) < 0) {  // type: Identifier
-            aliases.push(importClause.name.text);
+          if (importClause.name) {  // type: Identifier
+            aliases.push({ left: importClause.name.text, right: right });
           } else if (importClause.namedBindings) {  // type: NamedImportBindings
 
             // NamedImportBindings = NamedspaceImport | NamedImports
-            if ((<ts.NamespaceImport>importClause.namedBindings).name && 
-              aliases.indexOf((<ts.NamespaceImport>importClause.namedBindings).name.text) < 0) {
-                aliases.push((<ts.NamespaceImport>importClause.namedBindings).name.text);
+            if ((<ts.NamespaceImport>importClause.namedBindings).name) {
+                aliases.push({ left: (<ts.NamespaceImport>importClause.namedBindings).name.text, right: right });
             } else if ((<ts.NamedImports>importClause.namedBindings).elements) {
-              (<ts.NamedImports>importClause.namedBindings).elements.forEach((element: ts.ImportSpecifier) => aliases.push(element.name.text));
+              (<ts.NamedImports>importClause.namedBindings).elements.forEach((element: ts.ImportSpecifier) => {
+                aliases.push({left: element.name.text, right: right })
+              });
             }
           }
         }
@@ -116,8 +128,21 @@ export function findStrings(sourceFile: ts.SourceFile) {
         // ModuleReference = EntityName (for internal module ref) | ExternalModuleReference (for external)
         if (ts.isExternalModuleReference(modRef) && (<ts.ExternalModuleReference>modRef).expression.kind === ts.SyntaxKind.StringLiteral) {
           let extModRef = <ts.ExternalModuleReference>modRef;
-          text = (<ts.StringLiteral>extModRef.expression).text;
-        } else if (ts.isEntityName(modRef) && (<ts.EntityName>modRef).getText) {
+          right = (<ts.StringLiteral>extModRef.expression).text;
+        } else if (ts.isEntityName(modRef)) {
+          // EntityName = Identifier | QualifiedName 
+          // Identifier has .text
+          // QualifiedName has .right and .left. 
+          //  .left is either QualifiedName (recursive definition of qualifiers) or Identifier
+          //  .right is Identifier (the last part of the qualified name for the current QualifiedName object)
+          // While QualifiedName is a recursive definition, top-level instance returns complete right-side expression using .getText()
+          // Identifier also returns right-side expression using .getText()
+          right = (<ts.EntityName>modRef).getText();
+          re = new RegExp("^(.*\.)*" + needle + "(\..*)*$");
+        }
+        
+        /* saving in case need individual pieces of qualified name
+        else if (ts.isEntityName(modRef) && (<ts.EntityName>modRef).getText) {
           // EntityName = Identifier | QualifiedName 
           // Identifier.getText() returns the alias
           // QualifiedName has .right and .left. 
@@ -133,23 +158,29 @@ export function findStrings(sourceFile: ts.SourceFile) {
           // }
           let entName = <ts.EntityName>modRef;
           if (ts.isQualifiedName(entName)) {
+            
+            text = "";
             do {
-              text = (<ts.QualifiedName>entName).right.getText();
+              text = `${text}.${(<ts.QualifiedName>entName).right.getText()}`;
               if (text && text.search(/\s/) < 0 && text.endsWith("GeneralResources") && aliases.indexOf(text) < 0) {
                 aliases.push(text);
               } 
               entName = (<ts.QualifiedName>entName).left;
             } while (ts.isQualifiedName(entName));
+
           } 
           if (ts.isIdentifier(entName)) {
             text = (<ts.Identifier>entName).text;
           }
-          
-        }
-        
-        if (text && text.search(/\s/) < 0 && text.endsWith("GeneralResources") && aliases.indexOf(text) < 0) {
+
+          if (text && text.search(/\s/) < 0 && text.endsWith("GeneralResources") && aliases.indexOf(text) < 0) {
           aliases.push(text);
         }
+        */
+        if (right && right.search(re) > 0) {
+          aliases.push({left: importEqualsNode.name.text, right: right});
+        }
+
         break;
 
       // let stuff = Resources.words;
