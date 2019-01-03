@@ -11,6 +11,19 @@ import { GenRes1 } from "GeneralResources";
 import GenRes2 = require("ClassicNetwork/ClientResources/GeneralResources");
 import Helper from "Helpers.ts";
 
+module MyInternalModule.Helpers.MoreHelpers {
+  export class MyClass {
+
+  }
+}
+
+import MoreHelpers = MyInternalModule.Helpers.MoreHelpers;
+import Helpers = MyInternalModule.Helpers;
+import IntMod = MyInternalModule;
+import HelpersClass = MyInternalModule.Helpers.MoreHelpers.MyClass;
+
+var x = new Helpers.MyClass();
+
 var SubnetResources = GenRes2.VirtualNetwork.Subnets;
 
 export interface prompts {
@@ -40,7 +53,7 @@ export class Test {
     Helper.prompt(this._prompts);  // trace through separate ASTs?
   }
 
-	private pass(prmpts: prompts) {
+  private pass(prmpts: prompts) {
     console.log(prmpts.prompt1);
     console.log(prmpts.prompt2);
   }
@@ -69,16 +82,24 @@ export function findStrings(sourceFile: ts.SourceFile) {
         // <ImportDeclaration>node.importClause.<NamespaceImport>namedBindings.name.text == "Resources"
 
         let importNode = <ts.ImportDeclaration>node;
-        text = (<ts.ImportDeclaration>node).moduleSpecifier.getText();
-        if (text.endsWith("GeneralResources")) {
-          let importClause = importNode.importClause;
-          if (importClause.name) {
-            aliases.push(importClause.name.getText());
-          } else if (importClause.namedBindings) {
+
+        // ImportDeclaration.moduleSpecifier is type Expression but should be a StringLiteral (per types.ts).
+        // If it is not, it is a grammar error.  So we'll cast it to a StringLiteral so we can 
+        // get it's .text property.  If it's not a StringLiteral, this property will be undefined.
+        text = (<ts.StringLiteral>importNode.moduleSpecifier).text;  
+        if (text && text.endsWith("GeneralResources")) {
+          let importClause = importNode.importClause; // type: ImportClause
+
+          // ImportClause optionally has .name or .namedBindings properties
+          if (importClause.name) {  // type: Identifier
+            aliases.push(importClause.name.text);
+          } else if (importClause.namedBindings) {  // type: NamedImportBindings
+
+            // NamedImportBindings = NamedspaceImport | NamedImports
             if ((<ts.NamespaceImport>importClause.namedBindings).name) {
-              aliases.push((<ts.NamespaceImport>importClause.namedBindings).name.getText());
+              aliases.push((<ts.NamespaceImport>importClause.namedBindings).name.text);
             } else if ((<ts.NamedImports>importClause.namedBindings).elements) {
-              (<ts.NamedImports>importClause.namedBindings).elements.forEach((element: ts.ImportSpecifier) => aliases.push(element.name.getText()));
+              (<ts.NamedImports>importClause.namedBindings).elements.forEach((element: ts.ImportSpecifier) => aliases.push(element.name.text));
             }
           }
         }
@@ -87,15 +108,40 @@ export function findStrings(sourceFile: ts.SourceFile) {
       case ts.SyntaxKind.ImportEqualsDeclaration:
         // import GenRes2 = require("GeneralResources");
         // <ImportEqualsDeclaration>node.name.text == "GenRes2"
+
         let importEqualsNode = <ts.ImportEqualsDeclaration>node,
-            modRef = importEqualsNode.moduleReference; // ModuleReference: EntityName for internal module ref & ExternalModuleReference for external
+            modRef = importEqualsNode.moduleReference; // type: ModuleReference
+
+        // ModuleReference = EntityName (for internal module ref) | ExternalModuleReference (for external)
         if (ts.isExternalModuleReference(modRef) && (<ts.ExternalModuleReference>modRef).expression.kind === ts.SyntaxKind.StringLiteral) {
-          text = (<ts.ExternalModuleReference>modRef).expression.getText();
-        } else if (ts.isEntityName(modRef) && (<ts.EntityName>modRef).getText()) {
+          let extModRef = <ts.ExternalModuleReference>modRef;
+          text = (<ts.StringLiteral>extModRef.expression).text;
+        } else if (ts.isEntityName(modRef) && (<ts.EntityName>modRef).getText) {
+          // EntityName = Identifier | QualifiedName 
+          // Identifier.getText() returns the alias
+          // QualifiedName has .right and .left. 
+          // .left is either QualifiedName (recursive definition of qualifiers) or Identifier
+          // .right is Identifier (the last part of the qualified name for the current QualifiedName object)
+          //
+          // example:  MyInternalModule.Helpers.MoreHelpers
+          // ModuleReference: QualifiedName = {
+          //  left: QualifiedName = {
+          //    left: Identifier => "MyInternalModule"
+          //    right: Identifier => "Helpers"
+          //  right: Identifier => "MoreHelpers"
+          // }
+          let entName = <ts.EntityName>modRef;
+          if (ts.isIdentifier(entName)) {
+            text = (<ts.Identifier>entName).text;
+          } else {
+            while (ts.isQualifiedName(entName)) {
+
+            }
+          }
           text = (<ts.EntityName>modRef).getText();
         }
         
-        if (text && text.endsWith("GeneralResources")) {
+        if (text && text.search(/\s/) < 0 && text.endsWith("GeneralResources")) {
           aliases.push(text);
         }
         break;
