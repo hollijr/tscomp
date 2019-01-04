@@ -195,47 +195,12 @@ export function findStrings(sourceFile: ts.SourceFile) {
       // ExpressionStatement.expression.arguments.PropertyAccessExpression...
       // PropertyAccessExpression.expression.text == "moreStuff"  --> Identifier
       // PropertyAccessExpression.name.text == "update"  --> Identifier
+
+      // TODO
       case ts.SyntaxKind.VariableDeclaration:
         let flag = node.flags;
       case ts.SyntaxKind.ExpressionStatement:
       case ts.SyntaxKind.PropertyAccessExpression:
-      case ts.SyntaxKind.DoStatement:
-        if ((<ts.IterationStatement>node).statement.kind !== ts.SyntaxKind.Block) {
-          report(
-            node,
-            "A looping statement's contents should be wrapped in a block body."
-          );
-        }
-        break;
-
-      case ts.SyntaxKind.IfStatement:
-        let ifStatement = <ts.IfStatement>node;
-        if (ifStatement.thenStatement.kind !== ts.SyntaxKind.Block) {
-          report(
-            ifStatement.thenStatement,
-            "An if statement's contents should be wrapped in a block body."
-          );
-        }
-        if (
-          ifStatement.elseStatement &&
-          ifStatement.elseStatement.kind !== ts.SyntaxKind.Block &&
-          ifStatement.elseStatement.kind !== ts.SyntaxKind.IfStatement
-        ) {
-          report(
-            ifStatement.elseStatement,
-            "An else statement's contents should be wrapped in a block body."
-          );
-        }
-        break;
-
-      case ts.SyntaxKind.BinaryExpression:
-        let op = (<ts.BinaryExpression>node).operatorToken.kind;
-        if (
-          op === ts.SyntaxKind.EqualsEqualsToken ||
-          op == ts.SyntaxKind.ExclamationEqualsToken
-        ) {
-          report(node, "Use '===' and '!=='.");
-        }
         break;
     }
 
