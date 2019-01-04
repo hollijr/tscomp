@@ -9,10 +9,15 @@ function findStrings(sourceFile) {
     let strings = [];
     let needle = "GeneralResources";
     searchNode(sourceFile);
-    report(sourceFile, aliases.toString());
+    function toString() {
+        return `
+    left: ${this.left}
+    right: ${this.right}`;
+    }
     function searchNode(node) {
         let re = new RegExp("^(.*/)*" + needle + "(/.*)*$");
         let right = "";
+        let alias = null;
         switch (node.kind) {
             case ts.SyntaxKind.ImportDeclaration:
                 // import GenRes from "GeneralResources";
@@ -31,16 +36,18 @@ function findStrings(sourceFile) {
                     let importClause = importNode.importClause; // type: ImportClause
                     // ImportClause optionally has .name or .namedBindings properties
                     if (importClause.name) { // type: Identifier
-                        aliases.push({ left: importClause.name.text, right: right });
+                        aliases.push({ left: importClause.name.text, right: right, toString: toString });
                     }
                     else if (importClause.namedBindings) { // type: NamedImportBindings
                         // NamedImportBindings = NamedspaceImport | NamedImports
                         if (importClause.namedBindings.name) {
-                            aliases.push({ left: importClause.namedBindings.name.text, right: right });
+                            alias = { left: importClause.namedBindings.name.text, right: right, toString: toString };
+                            aliases.push(alias);
                         }
                         else if (importClause.namedBindings.elements) {
                             importClause.namedBindings.elements.forEach((element) => {
-                                aliases.push({ left: element.name.text, right: right });
+                                alias = { left: element.name.text, right: right, toString: toString };
+                                aliases.push(alias);
                             });
                         }
                     }
@@ -66,7 +73,7 @@ function findStrings(sourceFile) {
                     right = modRef.getText();
                     re = new RegExp("^(.*\\\.)*" + needle + "(\\\..*)*$");
                 }
-                /* saving in case need individual pieces of qualified name
+                /* saving in case we later need individual pieces of qualified name
                 else if (ts.isEntityName(modRef) && (<ts.EntityName>modRef).getText) {
                   // EntityName = Identifier | QualifiedName
                   // Identifier.getText() returns the alias
@@ -103,7 +110,8 @@ function findStrings(sourceFile) {
                 }
                 */
                 if (right && right.search(re) >= 0) {
-                    aliases.push({ left: importEqualsNode.name.text, right: right });
+                    alias = { left: importEqualsNode.name.text, right: right, toString: toString };
+                    aliases.push(alias);
                 }
                 break;
             // let stuff = Resources.words;
@@ -132,6 +140,7 @@ function findStrings(sourceFile) {
         let { line, character } = sourceFile.getLineAndCharacterOfPosition(node.getStart());
         console.log(`${sourceFile.fileName} (${line + 1},${character + 1}): ${message}`);
     }
+    return aliases;
 }
 exports.findStrings = findStrings;
 const fileNames = process.argv.slice(2);
@@ -139,7 +148,8 @@ fileNames.forEach(fileName => {
     // Parse a file
     let sourceFile = ts.createSourceFile(fileName, fs_1.readFileSync(fileName).toString(), ts.ScriptTarget.ES2015, 
     /*setParentNodes */ true);
-    // delint it
-    findStrings(sourceFile);
+    // find strings
+    let aliases = findStrings(sourceFile);
+    aliases.forEach((alias) => console.log(alias.toString()));
 });
 //# sourceMappingURL=findStrings.js.map
