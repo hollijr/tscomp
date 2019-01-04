@@ -4,7 +4,7 @@
   "description": "Tinkering with the TypeScript API",
   "main": "index.js",
   "scripts": {
-    "tsc": "tsc"
+    "tsc": "node tsc"
   },
   "repository": {
     "type": "git",
@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/hollijr/tscomp#readme",
   "dependencies": {
+    "@types/node": "^10.12.18",
     "typescript": "^3.3.0-dev.20181229"
   }
 }

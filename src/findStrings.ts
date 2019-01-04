@@ -98,7 +98,7 @@ export function findStrings(sourceFile: ts.SourceFile) {
         // The import value can begin with, end with or contain the needle between / to 
         right = (<ts.StringLiteral>importNode.moduleSpecifier).text;  
         
-        if (right && right.search(re) > 0) {
+        if (right && right.search(re) >= 0) {
           let importClause = importNode.importClause; // type: ImportClause
 
           // ImportClause optionally has .name or .namedBindings properties
@@ -138,7 +138,7 @@ export function findStrings(sourceFile: ts.SourceFile) {
           // While QualifiedName is a recursive definition, top-level instance returns complete right-side expression using .getText()
           // Identifier also returns right-side expression using .getText()
           right = (<ts.EntityName>modRef).getText();
-          re = new RegExp("^(.*\.)*" + needle + "(\..*)*$");
+          re = new RegExp("^(.*\\\.)*" + needle + "(\\\..*)*$");
         }
         
         /* saving in case need individual pieces of qualified name
@@ -177,7 +177,7 @@ export function findStrings(sourceFile: ts.SourceFile) {
           aliases.push(text);
         }
         */
-        if (right && right.search(re) > 0) {
+        if (right && right.search(re) >= 0) {
           aliases.push({left: importEqualsNode.name.text, right: right});
         }
 
@@ -201,6 +201,8 @@ export function findStrings(sourceFile: ts.SourceFile) {
         let flag = node.flags;
       case ts.SyntaxKind.ExpressionStatement:
       case ts.SyntaxKind.PropertyAccessExpression:
+        break;
+      default:
         break;
     }
 

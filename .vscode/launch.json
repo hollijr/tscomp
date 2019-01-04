@@ -7,10 +7,10 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch Program",
+            "name": "Launch findStrings",
             "cwd": "${workspaceFolder}\\src", 
-            "program": "${workspaceFolder}\\src\\findStrings.js",
-            "args": ["test.ts"],
+            "program": "${workspaceFolder}\\out\\findStrings.js",
+            "args": ["${workspaceFolder}\\src\\test.ts"],
             "preLaunchTask": "tsc: build - tsconfig.json",
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
