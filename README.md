@@ -22,6 +22,18 @@ Run a file:
     
 - node <filename>.js
 
+Using VS Code:
+
+    Build:
+    - Ctrl-Shift-B:  tsc build - tsconfig.json
+
+    Watch:
+    - Ctrl-Shift-B:  tsc watch - tsconfig.json
+
+    Debug:
+    - Launch findStrings from Debug pane menu
+
+
 ---
 
 __findStrings.ts__ is WIP that uses the TypeScript compiler API to find all strings that originate from an imported resource.
