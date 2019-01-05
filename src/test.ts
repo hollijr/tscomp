@@ -1,10 +1,10 @@
-import * as Resources from "./res/GeneralResources";
-import * as Resources1 from "./GeneralResources";
-import GenRes from "./GeneralResources";
-import { GenRes1 } from "./res/res/GeneralResources";
-import GenRes2 = require("./res/GeneralResources");
-import GenRes3 = require("./GeneralResources");
-import MyHelper from "./Helpers";
+import * as Resources from "./Resources/res/GeneralResources";
+import * as Resources1 from "./Resources/GeneralResources";
+import GenRes from "./Resources/GeneralResources";
+import { GenRes1 } from "./Resources/res/res/GeneralResources";
+import GenRes2 = require("./Resources/res/GeneralResources");
+import GenRes3 = require("./Resources/GeneralResources");
+import MyHelper from "./Resources/Helpers";
 
 module MyInternalModule.Helpers.MoreHelpers {
   export class MyClass {

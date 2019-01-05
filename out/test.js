@@ -1,10 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const Resources = require("./res/GeneralResources");
-const GeneralResources_1 = require("./GeneralResources");
-const GeneralResources_2 = require("./res/res/GeneralResources");
-const GenRes2 = require("./res/GeneralResources");
-const Helpers_1 = require("./Helpers");
+const Resources = require("./Resources/res/GeneralResources");
+const GeneralResources_1 = require("./Resources/GeneralResources");
+const GeneralResources_2 = require("./Resources/res/res/GeneralResources");
+const GenRes2 = require("./Resources/res/GeneralResources");
+const Helpers_1 = require("./Resources/Helpers");
 var MyInternalModule;
 (function (MyInternalModule) {
     var Helpers;
