@@ -5,6 +5,7 @@ const GeneralResources_1 = require("./Resources/GeneralResources");
 const GeneralResources_2 = require("./Resources/res/res/GeneralResources");
 const GenRes2 = require("./Resources/res/GeneralResources");
 const Helpers_1 = require("./Resources/Helpers");
+var SubnetResources = GenRes2.default.moreWords.delete;
 var MyInternalModule;
 (function (MyInternalModule) {
     var Helpers;
@@ -19,7 +20,8 @@ var MyInternalModule;
 })(MyInternalModule || (MyInternalModule = {}));
 var Helpers = MyInternalModule.Helpers;
 var x = new Helpers.MoreHelpers.MyClass();
-var SubnetResources = GenRes2.default.moreWords.delete;
+var Numbers = MyNS.Numbers;
+var Binary = Numbers.Binary;
 class Test {
     constructor(name) {
         this.name = name;

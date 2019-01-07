@@ -6,6 +6,8 @@ import GenRes2 = require("./Resources/res/GeneralResources");
 import GenRes3 = require("./Resources/GeneralResources");
 import MyHelper from "./Resources/Helpers";
 
+var SubnetResources = GenRes2.default.moreWords.delete;
+
 module MyInternalModule.Helpers.MoreHelpers {
   export class MyClass {
 
@@ -19,7 +21,27 @@ import HelpersClass = MyInternalModule.Helpers.MoreHelpers.MyClass;
 
 var x = new Helpers.MoreHelpers.MyClass();
 
-var SubnetResources = GenRes2.default.moreWords.delete;
+declare module MyNS {
+  const Colors: {
+    readonly blue: string;
+    readonly red: string;
+    readonly white: string;
+  }
+  module Numbers {
+    const Decimal: {
+      readonly tens: number;
+      readonly tenths: number;
+    }
+    const Binary: {
+      readonly ones: number;
+      readonly zeros: number;
+    }
+  }
+}
+import Colors = MyNS.Colors;
+import Numbers = MyNS.Numbers;
+var Binary = Numbers.Binary;
+import Decimals = MyNS.Numbers.Decimal;
 
 export interface prompts {
   prompt1: string;
