@@ -88,42 +88,6 @@ function findStrings(sourceFile) {
                         right = modRef.getText();
                         re = new RegExp("^(.*\\\.)*" + needle + "(\\\..*)*$");
                     }
-                    /* saving in case we later need individual pieces of qualified name
-                    else if (ts.isEntityName(modRef) && (<ts.EntityName>modRef).getText) {
-                      // EntityName = Identifier | QualifiedName
-                      // Identifier.getText() returns the alias
-                      // QualifiedName has .right and .left.
-                      // .left is either QualifiedName (recursive definition of qualifiers) or Identifier
-                      // .right is Identifier (the last part of the qualified name for the current QualifiedName object)
-                      //
-                      // example:  MyInternalModule.Helpers.MoreHelpers
-                      // ModuleReference: QualifiedName = {
-                      //  left: QualifiedName = {
-                      //    left: Identifier => "MyInternalModule"
-                      //    right: Identifier => "Helpers"
-                      //  right: Identifier => "MoreHelpers"
-                      // }
-                      let entName = <ts.EntityName>modRef;
-                      if (ts.isQualifiedName(entName)) {
-                        
-                        text = "";
-                        do {
-                          text = `${text}.${(<ts.QualifiedName>entName).right.getText()}`;
-                          if (text && text.search(/\s/) < 0 && text.endsWith("GeneralResources") && aliases.indexOf(text) < 0) {
-                            aliases.push(text);
-                          }
-                          entName = (<ts.QualifiedName>entName).left;
-                        } while (ts.isQualifiedName(entName));
-          
-                      }
-                      if (ts.isIdentifier(entName)) {
-                        text = (<ts.Identifier>entName).text;
-                      }
-          
-                      if (text && text.search(/\s/) < 0 && text.endsWith("GeneralResources") && aliases.indexOf(text) < 0) {
-                      aliases.push(text);
-                    }
-                    */
                     if (right && right.search(re) >= 0) {
                         alias = { left: importEqualsNode.name.text, right: right, toString: toString };
                         saveAlias(alias);
